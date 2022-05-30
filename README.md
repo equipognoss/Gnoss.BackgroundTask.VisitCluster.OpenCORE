@@ -8,7 +8,7 @@ Configuración estandar de esta aplicación en el archivo docker-compose.yml:
 
 ```yml
 visitcluster:
-    image: visitcluster
+    image: gnoss/visitcluster
     env_file: .env
     environment:
      virtuosoConnectionString: ${virtuosoConnectionString}
