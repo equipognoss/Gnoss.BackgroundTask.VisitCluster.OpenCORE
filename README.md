@@ -1,3 +1,5 @@
+![](https://content.gnoss.ws/imagenes/proyectos/personalizacion/7e72bf14-28b9-4beb-82f8-e32a3b49d9d3/cms/logognossazulprincipal.png)
+
 # Gnoss.BackgroundTask.VisitCluster.OpenCORE
 
 Aplicación de segundo plano que se encarga de insertar en base de datos las visitas que ha contabilizado el servicio Visit Registry. Espera un tiempo especificado (por defecto 5 minutos) para registrar las visitas transcurridas en ese período de tiempo. 
