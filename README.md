@@ -2,6 +2,8 @@
 
 # Gnoss.BackgroundTask.VisitCluster.OpenCORE
 
+![](https://github.com/equipognoss/Gnoss.BackgroundTask.VisitCluster.OpenCORE/workflows/BuildVisitCluster/badge.svg)
+
 Aplicación de segundo plano que se encarga de insertar en base de datos las visitas que ha contabilizado el servicio Visit Registry. Espera un tiempo especificado (por defecto 5 minutos) para registrar las visitas transcurridas en ese período de tiempo. 
 
 Configuración estandar de esta aplicación en el archivo docker-compose.yml: 
