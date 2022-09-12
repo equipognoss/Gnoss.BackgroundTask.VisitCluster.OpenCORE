@@ -10,7 +10,7 @@ Configuración estandar de esta aplicación en el archivo docker-compose.yml:
 
 ```yml
 visitcluster:
-    image: gnoss/visitcluster
+    image: gnoss/gnoss.backgroundtask.visitcluster.opencore
     env_file: .env
     environment:
      virtuosoConnectionString: ${virtuosoConnectionString}
