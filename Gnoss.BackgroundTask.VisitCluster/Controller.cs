@@ -157,6 +157,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 fichasRecursosModelos[pRecursoID].NumVisits = pNumeroVisitasRecurso;
 
                 // Guardar el modelo del recurso en Redis
+                docCL.InvalidarFichasRecursoMVC(fichasRecursosModelos.Keys.ToList(), pProyectoID);
                 docCL.AgregarFichasRecursoMVC(fichasRecursosModelos, pProyectoID);
 
             }
@@ -940,7 +941,9 @@ namespace Es.Riam.Gnoss.ServicioLive
                 VirtuosoAD virtuosoAD = scope.ServiceProvider.GetRequiredService<VirtuosoAD>();
                 RedisCacheWrapper redisCacheWrapper = scope.ServiceProvider.GetRequiredService<RedisCacheWrapper>();
                 GnossCache gnossCache = scope.ServiceProvider.GetRequiredService<GnossCache>();
+                ConfigService configService = scope.ServiceProvider.GetRequiredService<ConfigService>();
                 IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication = scope.ServiceProvider.GetRequiredService<IServicesUtilVirtuosoAndReplication>();
+                ComprobarTraza("VisitCluster", entityContext, loggingService, redisCacheWrapper, configService, servicesUtilVirtuosoAndReplication);
                 try
                 {
                     ComprobarCancelacionHilo();
@@ -955,9 +958,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
                         ProcesarFilaDeColaVisitas(filaCola, loggingService);
 
-                        filaCola = null;
-                        servicesUtilVirtuosoAndReplication.ConexionAfinidad = "";
-                        
+                        filaCola = null;                        
 
                         ControladorConexiones.CerrarConexiones(false);
                     }
@@ -967,6 +968,10 @@ namespace Es.Riam.Gnoss.ServicioLive
                 {
                     loggingService.GuardarLogError(ex);
                     return true;
+                }
+                finally
+                {
+                    GuardarTraza(loggingService);
                 }
             }
         }
@@ -1023,7 +1028,10 @@ namespace Es.Riam.Gnoss.ServicioLive
                 EntityContext entityContext = scope.ServiceProvider.GetRequiredService<EntityContext>();
                 LoggingService loggingService = scope.ServiceProvider.GetRequiredService<LoggingService>();
                 VirtuosoAD virtuosoAD = scope.ServiceProvider.GetRequiredService<VirtuosoAD>();
+                RedisCacheWrapper redisCacheWrapper = scope.ServiceProvider.GetRequiredService<RedisCacheWrapper>();
+                ConfigService configService = scope.ServiceProvider.GetRequiredService<ConfigService>();
                 IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication = scope.ServiceProvider.GetRequiredService<IServicesUtilVirtuosoAndReplication>();
+                ComprobarTraza("VisitCluster", entityContext, loggingService, redisCacheWrapper, configService, servicesUtilVirtuosoAndReplication);
                 try
                 {
                     ComprobarCancelacionHilo();
@@ -1040,8 +1048,6 @@ namespace Es.Riam.Gnoss.ServicioLive
 
                         filaCola = null;
 
-                        servicesUtilVirtuosoAndReplication.ConexionAfinidad = "";
-
                         ControladorConexiones.CerrarConexiones(false);
                     }
                     return true;
@@ -1050,6 +1056,10 @@ namespace Es.Riam.Gnoss.ServicioLive
                 {
                     loggingService.GuardarLogError(ex);
                     return true;
+                }
+                finally
+                {
+                    GuardarTraza(loggingService);
                 }
             }
         }
