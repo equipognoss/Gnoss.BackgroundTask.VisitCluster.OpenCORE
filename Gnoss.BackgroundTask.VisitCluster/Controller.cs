@@ -215,9 +215,9 @@ namespace Es.Riam.Gnoss.ServicioLive
                 else
                 {
                     DataWrapperDocumentacion docDW = docCN.ObtenerDocumentoPorID(colaRow.Id);
-                    if (docDW.ListaDocumento.Count > 0 && docDW.ListaDocumento.First().CreadorID.HasValue)
+                    if (docDW.ListaDocumento.Count > 0)
                     {
-                        identidadRecursoVisitado = docDW.ListaDocumento.First().CreadorID.Value;
+                        identidadRecursoVisitado = docDW.ListaDocumento.First().CreadorID;
                     }
                 }
 
@@ -677,7 +677,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
                 TipoAcceso tipoAccesoProyecto = proCN.ObtenerTipoAccesoProyecto(colaRow.ProyectoId);
 
-                Guid identidadMygnoss = idenCN.ObtenerIdentidadIDDeMyGNOSSPorIdentidad(documentoRow.CreadorID.Value);
+                Guid identidadMygnoss = idenCN.ObtenerIdentidadIDDeMyGNOSSPorIdentidad(documentoRow.CreadorID);
 
                 //Obtengo el nivel de certificacion
                 ProyectoCN proyCN = new ProyectoCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
@@ -688,7 +688,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
 
                 //EN SQL
-                idenCN.ActualizarPopularidadIdentidades(documentoRow.CreadorID.Value, -nivelcertificacion * 20);
+                idenCN.ActualizarPopularidadIdentidades(documentoRow.CreadorID, -nivelcertificacion * 20);
                 if (tipoAccesoProyecto == TipoAcceso.Publico || tipoAccesoProyecto == TipoAcceso.Restringido)
                 {
                     idenCN.ActualizarPopularidadIdentidades(identidadMygnoss, -nivelcertificacion * 20);

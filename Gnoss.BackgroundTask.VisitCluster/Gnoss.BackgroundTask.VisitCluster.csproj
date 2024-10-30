@@ -9,7 +9,7 @@
 	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
 	  <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.1" />
 	  <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
-	  <PackageReference Include="Npgsql" Version="6.0.9" />
+	  <PackageReference Include="Npgsql" Version="6.0.11" />
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.8" />
 	  <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.90" />
   </ItemGroup>
