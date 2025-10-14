@@ -1,18 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk.Worker">
 
-  <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
-    <UserSecretsId>dotnet-Gnoss.BackgroundTask.VisitCluster-133539DF-DB6E-49DC-A6F0-678D92C09B7F</UserSecretsId>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<UserSecretsId>dotnet-Gnoss.BackgroundTask.VisitCluster-133539DF-DB6E-49DC-A6F0-678D92C09B7F</UserSecretsId>
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+	</PropertyGroup>
 
-  <ItemGroup>
-	  <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
-	  <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.1" />
-	  <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
-	  <PackageReference Include="Npgsql" Version="6.0.11" />
-	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.8" />
-	  <PackageReference Include="Oracle.EntityFrameworkCore" Version="6.21.90" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="8.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.1" />
+		<PackageReference Include="Npgsql" Version="8.0.5" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
+		<PackageReference Include="Oracle.EntityFrameworkCore" Version="8.23.60" />
+	</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Gnoss.Commons\Es.Riam.Gnoss.AD\Es.Riam.Gnoss.AD.csproj" />

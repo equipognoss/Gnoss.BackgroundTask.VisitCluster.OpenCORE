@@ -36,6 +36,8 @@ using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using ConfiguracionServicios = Es.Riam.Gnoss.Util.General.ConfiguracionServicios;
 using Es.Riam.AbstractsOpen;
+using Microsoft.Extensions.Logging;
+using Es.Riam.Gnoss.Elementos.Suscripcion;
 
 namespace Es.Riam.Gnoss.ServicioLive
 {
@@ -82,6 +84,9 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// </summary>
         int mVVC = 5;
 
+        private string mDirectorioElementos = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos");
+        private ILogger mlogger;
+        private ILoggerFactory mLoggerFactory;
         #endregion
 
         #region Constructores
@@ -90,19 +95,23 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// Constructor
         /// </summary>
         /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuración de la base de datos</param>
-        public Controller(IServiceScopeFactory scopedFactory, ConfigService configService)
-            : base(scopedFactory, configService)
+        public Controller(IServiceScopeFactory scopedFactory, ConfigService configService, ILogger<Controller> logger, ILoggerFactory loggerFactory)
+            : base(scopedFactory, configService,logger,loggerFactory)
         {
+            mlogger = logger;
+            mLoggerFactory = loggerFactory;
         }
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuración de la base de datos</param>
-        public Controller(IServiceScopeFactory scopedFactory, ConfigService configService, int pVVC)
-            : base(scopedFactory, configService)
+        public Controller(IServiceScopeFactory scopedFactory, ConfigService configService, int pVVC, ILogger<Controller> logger, ILoggerFactory loggerFactory)
+            : base(scopedFactory, configService, logger, loggerFactory)
         {
             mVVC = pVVC;
+            mlogger = logger;
+            mLoggerFactory = loggerFactory;
         }
 
         #endregion
@@ -118,7 +127,7 @@ namespace Es.Riam.Gnoss.ServicioLive
         ///   /// <param name="pIdentidadID">Identificador de la identidad de la que se busca la popularidad</param>
         public double ObtengoPopularidadIdentidad(Guid pIdentidadID, Guid pProyectoID, EntityContext entityContext, LoggingService loggingService, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication)
         {
-            IdentidadCN idenCN = new IdentidadCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            IdentidadCN idenCN = new IdentidadCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<IdentidadCN>(), mLoggerFactory);
             double popularidad = (double)idenCN.ObtenerPopularidadDeIdentidadEnProyecto(pIdentidadID, pProyectoID);
 
             //Normalizo la popularidad de 1 a 10
@@ -143,7 +152,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
         private void ActualizarVisitasModeloRecursoMVC(Guid pRecursoID, Guid pProyectoID, int pNumeroVisitasRecurso, EntityContext entityContext, LoggingService loggingService, RedisCacheWrapper redisCacheWrapper, EntityContextBASE entityContextBASE, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication)
         {
-            DocumentacionCL docCL = new DocumentacionCL(mFicheroConfiguracionBD, "recursos", entityContext, loggingService, redisCacheWrapper, mConfigService, servicesUtilVirtuosoAndReplication);
+            DocumentacionCL docCL = new DocumentacionCL(mFicheroConfiguracionBD, "recursos", entityContext, loggingService, redisCacheWrapper, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<DocumentacionCL>(), mLoggerFactory);
             docCL.Dominio = mDominio;
             List<Guid> listaDocumentos = new List<Guid>();
             listaDocumentos.Add(pRecursoID);
@@ -164,7 +173,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             else
             {
                 // Refrescamos la caché del recurso
-                BaseComunidadCN baseComunidadCN = new BaseComunidadCN(entityContext, loggingService, entityContextBASE, mConfigService, servicesUtilVirtuosoAndReplication);
+                BaseComunidadCN baseComunidadCN = new BaseComunidadCN(entityContext, loggingService, entityContextBASE, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<BaseComunidadCN>(), mLoggerFactory);
                 baseComunidadCN.InsertarFilaEnColaRefrescoCache(pProyectoID, TiposEventosRefrescoCache.ModificarCaducidadCache, TipoBusqueda.Recursos, pRecursoID.ToString());
                 baseComunidadCN.Dispose();
             }
@@ -184,17 +193,17 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// <param name="proCN"></param>
         public void ProcesarColaPopularidad(Guid proyectoID, LiveDS.ColaPopularidadRow colaRow, EntityContext entityContext, LoggingService loggingService, VirtuosoAD virtuosoAD, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication)
         {
-            FacetadoCN facCN = new FacetadoCN(mFicheroConfiguracionBD, mUrlIntragnoss, null, entityContext, loggingService, mConfigService, virtuosoAD, servicesUtilVirtuosoAndReplication);
+            FacetadoCN facCN = new FacetadoCN(mFicheroConfiguracionBD, mUrlIntragnoss, null, entityContext, loggingService, mConfigService, virtuosoAD, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<FacetadoCN>(), mLoggerFactory);
             //facCN.FacetadoAD.CadenaConexionBase = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) + Path.DirectorySeparatorChar + "config" + Path.DirectorySeparatorChar + "gnossBASE.config";
             facCN.FacetadoAD.CadenaConexionBase = this.mFicheroConfiguracionBDBase;
 
-            IdentidadCN idenCN = new IdentidadCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            IdentidadCN idenCN = new IdentidadCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<IdentidadCN>(), mLoggerFactory);
 
-            SuscripcionCN susCN = new SuscripcionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            SuscripcionCN susCN = new SuscripcionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<SuscripcionCN>(), mLoggerFactory);
 
-            ProyectoCN proCN = new ProyectoCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            ProyectoCN proCN = new ProyectoCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<ProyectoCN>(), mLoggerFactory);
 
-            DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<DocumentacionCN>(), mLoggerFactory);
 
             #region Identidad1 visita un recurso de Identidad 2
             //MJ •	Identidad1 visita un recurso de Identidad 2. 1 * popularidad identidad1 a Identidad2
@@ -680,7 +689,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 Guid identidadMygnoss = idenCN.ObtenerIdentidadIDDeMyGNOSSPorIdentidad(documentoRow.CreadorID);
 
                 //Obtengo el nivel de certificacion
-                ProyectoCN proyCN = new ProyectoCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+                ProyectoCN proyCN = new ProyectoCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<ProyectoCN>(), mLoggerFactory);
                 DataWrapperProyecto dataWrapperProyecto = proyCN.ObtenerNivelesCertificacionRecursosProyecto(colaRow.ProyectoId);
 
                 int nivelcertificacion = dataWrapperProyecto.ListaNivelCertificacion.FirstOrDefault(nivelCert => nivelCert.NivelCertificacionID.Equals(colaRow.Id2)).Orden;
@@ -718,7 +727,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                     LoggingService loggingService = scope.ServiceProvider.GetRequiredService<LoggingService>();
                     EntityContext entityContext = scope.ServiceProvider.GetRequiredService<EntityContext>();
                     IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication = scope.ServiceProvider.GetRequiredService<IServicesUtilVirtuosoAndReplication>();
-                    LiveUsuariosCN liveUsuariosCN = new LiveUsuariosCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+                    LiveUsuariosCN liveUsuariosCN = new LiveUsuariosCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<LiveUsuariosCN>(), mLoggerFactory);
                     VirtuosoAD virtuosoAD = scope.ServiceProvider.GetRequiredService<VirtuosoAD>();
                     RedisCacheWrapper redisCacheWrapper = scope.ServiceProvider.GetRequiredService<RedisCacheWrapper>();
                     GnossCache gnossCache = scope.ServiceProvider.GetRequiredService<GnossCache>();
@@ -736,26 +745,26 @@ namespace Es.Riam.Gnoss.ServicioLive
                             RealizarMantenimientoRabbitMQColaVisitas(loggingService);
                         }
 
-                        DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+                        DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<DocumentacionCN>(), mLoggerFactory);
 
-                        if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}.txt")))
+                        if (File.Exists(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}.txt")))
                         {
                             string[] listaVisitas = null;
                             lock (OBJETO_BLOQUEO_ARCHIVO_VISITAS)
                             {
-                                listaVisitas = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}.txt"));
+                                listaVisitas = File.ReadAllLines(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}.txt"));
                             }
 
-                            bool existeCopiaAnterior = File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
+                            bool existeCopiaAnterior = File.Exists(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
 
                             if (existeCopiaAnterior || listaVisitas.Count() > 100 || mFechaHace5Min.AddMinutes(mVVC) < DateTime.Now)
                             {
                                 if (existeCopiaAnterior)
                                 {
-                                    listaVisitas = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}.txt"));
-                                    if (File.Exists(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt")))
+                                    listaVisitas = File.ReadAllLines(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}.txt"));
+                                    if (File.Exists(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt")))
                                     {
-                                        int numElementosProcesados = File.ReadAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt")).Length;
+                                        int numElementosProcesados = File.ReadAllLines(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt")).Length;
                                         listaVisitas = listaVisitas.Skip(numElementosProcesados).ToArray();
                                     }
                                 }
@@ -763,7 +772,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                                 {
                                     lock (OBJETO_BLOQUEO_ARCHIVO_VISITAS)
                                     {
-                                        File.Move(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}.txt"), Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
+                                        File.Move(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}.txt"), Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
                                     }
                                 }
 
@@ -834,19 +843,19 @@ namespace Es.Riam.Gnoss.ServicioLive
                                         }
                                         catch (Exception ex)
                                         {
-                                            loggingService.GuardarLog(ex.Message);
+                                            loggingService.GuardarLog(ex.Message,mlogger);
                                         }
                                         finally
                                         {
-                                            File.AppendAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt"), new List<string> { "Linea procesada correctamente" });
+                                            File.AppendAllLines(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt"), new List<string> { "Linea procesada correctamente" });
                                         }
 
                                         liveDS.Dispose();
                                     }
                                 }
 
-                                File.Delete(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
-                                File.Delete(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt"));
+                                File.Delete(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Copia.txt"));
+                                File.Delete(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}_Procesados.txt"));
                             }
                         }
                     }
@@ -856,7 +865,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                     }
                     catch (Exception ex)
                     {
-                        loggingService.GuardarLog("ERROR:  Excepción: " + ex.ToString() + "\n\n\tTraza: " + ex.StackTrace);
+                        loggingService.GuardarLog("ERROR:  Excepción: " + ex.ToString() + "\n\n\tTraza: " + ex.StackTrace,mlogger);
                     }
                     finally
                     {
@@ -885,7 +894,7 @@ namespace Es.Riam.Gnoss.ServicioLive
         {
             #region Establezco el dominio de la cache
 
-            ParametroAplicacionCN parametroApliCN = new ParametroAplicacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication);
+            ParametroAplicacionCN parametroApliCN = new ParametroAplicacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<ParametroAplicacionCN>(), mLoggerFactory);
             ParametroAplicacionGBD gestorParamatroAppController = new ParametroAplicacionGBD(loggingService, entityContext, mConfigService);
             GestorParametroAplicacion gestorParametroAplicacion = new GestorParametroAplicacion();
             gestorParamatroAppController.ObtenerConfiguracionGnoss(gestorParametroAplicacion);
@@ -915,7 +924,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 RabbitMQClient.ReceivedDelegate funcionProcesarItem = new RabbitMQClient.ReceivedDelegate(ProcesarItemColaVisitas);
                 RabbitMQClient.ShutDownDelegate funcionShutDown = new RabbitMQClient.ShutDownDelegate(OnShutDown);
 
-                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_VISITAS, loggingService, mConfigService, EXCHANGE, COLA_VISITAS);
+                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_VISITAS, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_VISITAS);
 
                 try
                 {
@@ -925,7 +934,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 catch (Exception ex)
                 {
                     mReiniciarLecturaRabbit = true;
-                    loggingService.GuardarLogError(ex);
+                    loggingService.GuardarLogError(ex,mlogger);
                 }
             }
         }
@@ -966,7 +975,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 }
                 catch (Exception ex)
                 {
-                    loggingService.GuardarLogError(ex);
+                    loggingService.GuardarLogError(ex,mlogger);
                     return true;
                 }
                 finally
@@ -988,12 +997,12 @@ namespace Es.Riam.Gnoss.ServicioLive
 
                 lock (OBJETO_BLOQUEO_ARCHIVO_VISITAS)
                 {
-                    File.AppendAllLines(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos", $"ListaElementosColaVisitas_{mPlataforma}.txt"), new string[] { json });
+                    File.AppendAllLines(Path.Combine(mDirectorioElementos, $"ListaElementosColaVisitas_{mPlataforma}.txt"), new string[] { json });
                 }
             }
             catch (Exception ex)
             {
-                loggingService.GuardarLogError(ex, $"No se ha podido escribir en el fichero la fila {pFilaCola}");
+                loggingService.GuardarLogError(ex, $"No se ha podido escribir en el fichero la fila {pFilaCola}",mlogger);
             }            
 
             return true;
@@ -1006,7 +1015,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 RabbitMQClient.ReceivedDelegate funcionProcesarItem = new RabbitMQClient.ReceivedDelegate(ProcesarItemColaPopularidad);
                 RabbitMQClient.ShutDownDelegate funcionShutDown = new RabbitMQClient.ShutDownDelegate(OnShutDown);
 
-                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_POPULARIDAD, loggingService, mConfigService, EXCHANGE, COLA_POPULARIDAD);
+                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_POPULARIDAD, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_POPULARIDAD);
 
                 try
                 {
@@ -1016,7 +1025,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 catch (Exception ex)
                 {
                     mReiniciarLecturaRabbit = true;
-                    loggingService.GuardarLogError(ex);
+                    loggingService.GuardarLogError(ex,mlogger);
                 }
             }
         }
@@ -1054,7 +1063,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 }
                 catch (Exception ex)
                 {
-                    loggingService.GuardarLogError(ex);
+                    loggingService.GuardarLogError(ex, mlogger);
                     return true;
                 }
                 finally
@@ -1077,7 +1086,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                     }
                     catch (Exception ex)
                     {
-                        loggingService.GuardarLogError(ex);
+                        loggingService.GuardarLogError(ex, mlogger);
                     }
 
                     //Cambiamos el número de intentos a 7 para procesarlas cada 5 min.
@@ -1098,7 +1107,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             }
             catch (Exception ex)
             {
-                loggingService.GuardarLog($"ERROR al procesar ColaPopularidad: {ex.Message}");                   
+                loggingService.GuardarLog($"ERROR al procesar ColaPopularidad: {ex.Message}", mlogger);                   
             }
 
             return true;
@@ -1112,7 +1121,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
         protected override ControladorServicioGnoss ClonarControlador()
         {
-            Controller controlador = new Controller(ScopedFactory, mConfigService, mVVC);
+            Controller controlador = new Controller(ScopedFactory, mConfigService, mVVC, mLoggerFactory.CreateLogger<Controller>(), mLoggerFactory);
             return controlador;
         }
 

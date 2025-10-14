@@ -1,3 +1,4 @@
+using Es.Riam.Gnoss.Elementos.Suscripcion;
 using Es.Riam.Gnoss.ServicioLive;
 using Es.Riam.Gnoss.Servicios;
 using Es.Riam.Gnoss.Util.Configuracion;
@@ -14,13 +15,15 @@ namespace Gnoss.BackgroundTask.VisitCluster
 {
     public class VisitClusterWorker : Worker
     {
-        private readonly ILogger<VisitClusterWorker> _logger;
         private readonly ConfigService _configService;
+        private ILogger mlogger;
+        private ILoggerFactory mLoggerFactory;
 
-        public VisitClusterWorker(ILogger<VisitClusterWorker> logger, ConfigService configService, IServiceScopeFactory scopeFactory) : base(logger, scopeFactory)
+        public VisitClusterWorker(ConfigService configService, IServiceScopeFactory scopeFactory, ILogger<VisitClusterWorker> logger, ILoggerFactory loggerFactory) : base(logger, scopeFactory)
         {
-            _logger = logger;
             _configService = configService;
+            mlogger = logger;
+            mLoggerFactory = loggerFactory;
         }
 
         protected override List<ControladorServicioGnoss> ObtenerControladores()
@@ -32,7 +35,7 @@ namespace Gnoss.BackgroundTask.VisitCluster
             int  visitasVotosComentarios = _configService.ObtenerVisitasVotosComentarios();
 
             List<ControladorServicioGnoss> controladores = new List<ControladorServicioGnoss>();
-            controladores.Add(new Controller(ScopedFactory, _configService));
+            controladores.Add(new Controller(ScopedFactory, _configService, mLoggerFactory.CreateLogger<Controller>(), mLoggerFactory));
             return controladores;
         }
     }
