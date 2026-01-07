@@ -84,60 +84,20 @@ namespace Gnoss.BackgroundTask.VisitCluster
                     }
                     services.AddSingleton<ConfigService>();
 
-                    string acid = "";
-                    if (environmentVariables.Contains("acid"))
-                    {
-                        acid = environmentVariables["acid"] as string;
-                    }
-                    else
-                    {
-                        acid = configuration.GetConnectionString("acid");
-                    }
-                    string baseConnection = "";
-                    if (environmentVariables.Contains("base"))
-                    {
-                        baseConnection = environmentVariables["base"] as string;
-                    }
-                    else
-                    {
-                        baseConnection = configuration.GetConnectionString("base");
-                    }
                     if (bdType.Equals("0"))
                     {
-                        services.AddDbContext<EntityContext>(options =>
-                                options.UseSqlServer(acid, o => o.UseCompatibilityLevel(110))
-                                );
-                        services.AddDbContext<EntityContextBASE>(options =>
-                                options.UseSqlServer(baseConnection, o => o.UseCompatibilityLevel(110))
-
-                                );
+                        services.AddDbContext<EntityContext>();
+                        services.AddDbContext<EntityContextBASE>();
                     }
-					else if (bdType.Equals("1"))
-					{
-						services.AddDbContext<EntityContext, EntityContextOracle>(options =>
-								options.UseOracle(acid)
-								);
-						services.AddDbContext<EntityContextBASE, EntityContextBASEOracle>(options =>
-								options.UseOracle(baseConnection)
-
-								);
-					}
-					else if (bdType.Equals("2"))
+                    else if (bdType.Equals("1"))
                     {
-                        services.AddDbContext<EntityContext, EntityContextPostgres>(opt =>
-                        {
-                            var builder = new NpgsqlDbContextOptionsBuilder(opt);
-                            builder.SetPostgresVersion(new Version(9, 6));
-                            opt.UseNpgsql(acid);
-
-                        });
-                        services.AddDbContext<EntityContextBASE, EntityContextBASEPostgres>(opt =>
-                        {
-                            var builder = new NpgsqlDbContextOptionsBuilder(opt);
-                            builder.SetPostgresVersion(new Version(9, 6));
-                            opt.UseNpgsql(baseConnection);
-
-                        });
+                        services.AddDbContext<EntityContext, EntityContextOracle>();
+                        services.AddDbContext<EntityContextBASE, EntityContextBASEOracle>();
+                    }
+                    else if (bdType.Equals("2"))
+                    {
+                        services.AddDbContext<EntityContext, EntityContextPostgres>();
+                        services.AddDbContext<EntityContextBASE, EntityContextBASEPostgres>();
                     }
                     services.AddHostedService<VisitClusterWorker>();
                 });
