@@ -29,19 +29,21 @@ namespace Gnoss.BackgroundTask.VisitCluster
 {
     public class Program
     {
+        private static Serilog.ILogger _startupLogger;
         public static void Main(string[] args)
         {
-            LoggingService.ConfigurarBasicStartupSerilog().CreateBootstrapLogger();
+            _startupLogger = LoggingService.ConfigurarBasicStartupSerilog().CreateBootstrapLogger().ForContext<Program>();
             try
             {
                 CreateHostBuilder(args).Build().Run();
             }
             catch (Exception ex)
             {
-                Log.Fatal(ex, "Error fatal durante el arranque");
+                _startupLogger.Fatal(ex, "Error fatal durante el arranque");
             }
             finally
             {
+                (_startupLogger as IDisposable)?.Dispose();
                 Log.CloseAndFlush(); // asegura que se escriben todos los logs pendientes
             }
         }
@@ -52,12 +54,14 @@ namespace Gnoss.BackgroundTask.VisitCluster
                 .UseSystemd() //Linux
                 .ConfigureAppConfiguration((hostContext, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                    config.AddJsonFile($"appsettings.{hostContext.HostingEnvironment.EnvironmentName}.json", optional: true, reloadOnChange: true);
+                    LoggingService.ConfigurarSeguimientoFicheros(hostContext, config, _startupLogger);
                 })
                 .UseSerilog((context, services, configuration) => LoggingService.ConfigurarSerilog(context.Configuration, services, configuration))
                 .ConfigureServices((hostContext, services) =>
                 {
+                    LoggingService.SuscribirCambios(hostContext, _startupLogger);
+                    _startupLogger.Information("Suscripción a cambios de configuración registrada");
+
                     IConfiguration configuration = hostContext.Configuration;
 
                     AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
