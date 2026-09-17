@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 
 RUN sed -i 's/\[openssl_init\]/# [openssl_init]/' /etc/ssl/openssl.cnf &&\
     printf "\n\n[openssl_init]\nssl_conf = ssl_sect" >> /etc/ssl/openssl.cnf &&\
@@ -15,7 +15,7 @@ RUN dotnet restore Gnoss.BackgroundTask.VisitCluster.OpenCORE/Gnoss.BackgroundTa
 
 RUN dotnet publish Gnoss.BackgroundTask.VisitCluster.OpenCORE/Gnoss.BackgroundTask.VisitCluster/Gnoss.BackgroundTask.VisitCluster.csproj -c Release -o out
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 
 RUN sed -i 's/\[openssl_init\]/# [openssl_init]/' /etc/ssl/openssl.cnf &&\
     printf "\n\n[openssl_init]\nssl_conf = ssl_sect" >> /etc/ssl/openssl.cnf &&\
