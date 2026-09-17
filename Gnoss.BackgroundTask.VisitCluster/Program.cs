@@ -4,6 +4,8 @@ using Es.Riam.Gnoss.AD.EntityModelBASE;
 using Es.Riam.Gnoss.AD.Virtuoso;
 using Es.Riam.Gnoss.CL;
 using Es.Riam.Gnoss.CL.RelatedVirtuoso;
+using Es.Riam.Gnoss.HealthChecks;
+using Es.Riam.Gnoss.RabbitMQ;
 using Es.Riam.Gnoss.Servicios;
 using Es.Riam.Gnoss.Util.Configuracion;
 using Es.Riam.Gnoss.Util.General;
@@ -16,14 +18,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Serilog;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Gnoss.BackgroundTask.VisitCluster
 {
@@ -65,11 +62,10 @@ namespace Gnoss.BackgroundTask.VisitCluster
                     IConfiguration configuration = hostContext.Configuration;
 
                     AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-					services.AddScoped(typeof(UtilTelemetry));
                     services.AddScoped(typeof(Usuario));
                     services.AddScoped(typeof(UtilPeticion));
 
-                    services.AddScoped(typeof(RedisCacheWrapper));
+                    services.AddSingleton(typeof(RedisCacheWrapper));
                     services.AddScoped(typeof(UtilidadesVirtuoso));
                     services.AddScoped(typeof(VirtuosoAD));
                     services.AddScoped(typeof(LoggingService));
@@ -109,7 +105,30 @@ namespace Gnoss.BackgroundTask.VisitCluster
                         services.AddDbContext<EntityContext, EntityContextPostgres>();
                         services.AddDbContext<EntityContextBASE, EntityContextBASEPostgres>();
                     }
+                    var hcConfigService = new ConfigService();
+                    services.AddHealthChecks()
+                        .AddGnossDatabaseHealthCheck<EntityContext>(bdType, hcConfigService.ObtenerSqlConnectionString())
+                        .AddGnossRedisHealthCheck(hcConfigService.ObtenerConexionRedisIPMaster("redis"))
+                        .AddGnossVirtuosoHealthCheck(hcConfigService.ObtenerVirtuosoConnectionString().ConnectionString)
+                        .AddGnossRabbitMQHealthCheck(hcConfigService.ObtenerRabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN));
+
                     services.AddHostedService<VisitClusterWorker>();
-                });
+                })
+#if !DEBUG
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.ConfigureKestrel((ctx, options) =>
+                        options.ListenAnyIP(ctx.Configuration.GetValue("ManagementPort", 8081)));
+                    webBuilder.Configure(app =>
+                    {
+                        var managementPort = app.ApplicationServices
+                            .GetRequiredService<IConfiguration>()
+                            .GetValue("ManagementPort", 8081);
+                        app.UseRouting();
+                        app.UseEndpoints(endpoints => endpoints.MapGnossHealthEndpoints(managementPort));
+                    });
+                })
+#endif
+                ;
     }
 }

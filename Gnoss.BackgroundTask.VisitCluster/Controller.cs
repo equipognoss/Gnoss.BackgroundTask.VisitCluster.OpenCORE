@@ -87,6 +87,8 @@ namespace Es.Riam.Gnoss.ServicioLive
         private string mDirectorioElementos = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "elementos");
         private ILogger mlogger;
         private ILoggerFactory mLoggerFactory;
+        private RabbitMQClient mRabbitMQClientVisitas;
+        private RabbitMQClient mRabbitMQClientPopularidad;
         #endregion
 
         #region Constructores
@@ -94,7 +96,7 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuración de la base de datos</param>
+        /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuraciï¿½n de la base de datos</param>
         public Controller(IServiceScopeFactory scopedFactory, ConfigService configService, ILogger<Controller> logger, ILoggerFactory loggerFactory)
             : base(scopedFactory, configService,logger,loggerFactory)
         {
@@ -105,7 +107,7 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuración de la base de datos</param>
+        /// <param name="pFicheroConfiguracionBD">Ruta al archivo de configuraciï¿½n de la base de datos</param>
         public Controller(IServiceScopeFactory scopedFactory, ConfigService configService, int pVVC, ILogger<Controller> logger, ILoggerFactory loggerFactory)
             : base(scopedFactory, configService, logger, loggerFactory)
         {
@@ -116,9 +118,9 @@ namespace Es.Riam.Gnoss.ServicioLive
 
         #endregion
 
-        #region Métodos generales
+        #region Mï¿½todos generales
 
-        #region Públicos
+        #region Pï¿½blicos
 
         /// <summary>
         /// Obtiene la popularidad de una identidad en una comunidad
@@ -172,7 +174,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             }
             else
             {
-                // Refrescamos la caché del recurso
+                // Refrescamos la cachï¿½ del recurso
                 BaseComunidadCN baseComunidadCN = new BaseComunidadCN(entityContext, loggingService, entityContextBASE, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<BaseComunidadCN>(), mLoggerFactory);
                 baseComunidadCN.InsertarFilaEnColaRefrescoCache(pProyectoID, TiposEventosRefrescoCache.ModificarCaducidadCache, TipoBusqueda.Recursos, pRecursoID.ToString());
                 baseComunidadCN.Dispose();
@@ -206,7 +208,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<DocumentacionCN>(), mLoggerFactory);
 
             #region Identidad1 visita un recurso de Identidad 2
-            //MJ •	Identidad1 visita un recurso de Identidad 2. 1 * popularidad identidad1 a Identidad2
+            //MJ ï¿½	Identidad1 visita un recurso de Identidad 2. 1 * popularidad identidad1 a Identidad2
             if (colaRow.Accion == (int)AccionLive.VisitaRecurso)
             {
 
@@ -239,7 +241,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                 //Obtengo la popularidad de identidad 1
                 double popularidad = ObtengoPopularidadIdentidad(colaRow.Id2, colaRow.ProyectoId, entityContext, loggingService, servicesUtilVirtuosoAndReplication);
 
-                //Multiplicamos la popularidad por el número de recursos que se han visitado?
+                //Multiplicamos la popularidad por el nï¿½mero de recursos que se han visitado?
                 int numRecursos = 1;
                 if (!string.IsNullOrEmpty(colaRow.InfoExtra))
                 {
@@ -269,7 +271,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
 
                 //EN VIRTUOSO
-                // Se encarga el servicio de optimización cada Domingo... No es necesario actualizar la popularidad con cada visita que se recibe =/
+                // Se encarga el servicio de optimizaciï¿½n cada Domingo... No es necesario actualizar la popularidad con cada visita que se recibe =/
                 //facCN.ModificarPopularidadIdentidad(identidadRecursoVisitado.ToString());
                 //if (tipoAccesoProyecto == TipoAcceso.Publico || tipoAccesoProyecto == TipoAcceso.Restringido)
                 //{
@@ -280,7 +282,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             #endregion
 
             #region Identidad1 vincula un recurso a un recurso de Identidad2
-            //MJ •	Identidad1 vincula un recurso a un recurso de Identidad2. 5 a Identidad1. 3 * popularidad identidad1 a Identidad2
+            //MJ ï¿½	Identidad1 vincula un recurso a un recurso de Identidad2. 5 a Identidad1. 3 * popularidad identidad1 a Identidad2
 
             if (colaRow.Accion == (int)AccionLive.VincularRecursoaRecurso)
             {
@@ -341,7 +343,7 @@ namespace Es.Riam.Gnoss.ServicioLive
             #endregion
 
             #region Identidad1 desvincula un recurso a un recurso de Identidad2
-            //MJ •	Identidad1 desvincula un recurso a un recurso de Identidad2. 5 a Identidad1. 3 * popularidad identidad1 a Identidad2
+            //MJ ï¿½	Identidad1 desvincula un recurso a un recurso de Identidad2. 5 a Identidad1. 3 * popularidad identidad1 a Identidad2
 
             if (colaRow.Accion == (int)AccionLive.DesincularRecursoaRecurso)
             {
@@ -634,11 +636,11 @@ namespace Es.Riam.Gnoss.ServicioLive
             }
             #endregion
 
-            #region Añadir Articulo Blog
+            #region Aï¿½adir Articulo Blog
 
             if (colaRow.Accion == (int)AccionLive.AgregarArticuloBlog)
             {
-                //MJ: Identidad1 crea un artículo de blog. 30 a Identidad1
+                //MJ: Identidad1 crea un artï¿½culo de blog. 30 a Identidad1
 
 
                 //MODIFICAR POPULARIDAD
@@ -657,7 +659,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
             if (colaRow.Accion == (int)AccionLive.EliminarArticuloBlog)
             {
-                //MJ: Identidad1 borra un artículo de blog. 30 a Identidad1
+                //MJ: Identidad1 borra un artï¿½culo de blog. 30 a Identidad1
 
 
                 //MODIFICAR POPULARIDAD
@@ -738,12 +740,6 @@ namespace Es.Riam.Gnoss.ServicioLive
                         mVVC = mConfigService.ObtenerIntervaloVVC();
                         
                         ComprobarCancelacionHilo();
-
-                        if (mReiniciarLecturaRabbit)
-                        {
-                            RealizarMantenimientoRabbitMQColaPopularidad(loggingService);
-                            RealizarMantenimientoRabbitMQColaVisitas(loggingService);
-                        }
 
                         DocumentacionCN docCN = new DocumentacionCN(entityContext, loggingService, mConfigService, servicesUtilVirtuosoAndReplication, mLoggerFactory.CreateLogger<DocumentacionCN>(), mLoggerFactory);
 
@@ -865,7 +861,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                     }
                     catch (Exception ex)
                     {
-                        loggingService.GuardarLog("ERROR:  Excepción: " + ex.ToString() + "\n\n\tTraza: " + ex.StackTrace,mlogger);
+                        loggingService.GuardarLog("ERROR:  Excepciï¿½n: " + ex.ToString() + "\n\n\tTraza: " + ex.StackTrace,mlogger);
                     }
                     finally
                     {
@@ -890,7 +886,7 @@ namespace Es.Riam.Gnoss.ServicioLive
         /// <summary>
         /// Procesa cada suscripcion para crear su notificacion correspondiente
         /// </summary>
-        public override void RealizarMantenimiento(EntityContext entityContext, EntityContextBASE entityContextBASE, UtilidadesVirtuoso utilidadesVirtuoso, LoggingService loggingService, RedisCacheWrapper redisCacheWrapper, GnossCache gnossCache, VirtuosoAD virtuosoAD, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication)
+        public override void RealizarMantenimiento(EntityContext entityContext, EntityContextBASE entityContextBASE, UtilidadesVirtuoso utilidadesVirtuoso, LoggingService loggingService, RedisCacheWrapper redisCacheWrapper, GnossCache gnossCache, IServicesUtilVirtuosoAndReplication servicesUtilVirtuosoAndReplication)
         {
             #region Establezco el dominio de la cache
 
@@ -924,11 +920,12 @@ namespace Es.Riam.Gnoss.ServicioLive
                 RabbitMQClient.ReceivedDelegate funcionProcesarItem = new RabbitMQClient.ReceivedDelegate(ProcesarItemColaVisitas);
                 RabbitMQClient.ShutDownDelegate funcionShutDown = new RabbitMQClient.ShutDownDelegate(OnShutDown);
 
-                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_VISITAS, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_VISITAS);
+                mRabbitMQClientVisitas?.Dispose();
+                mRabbitMQClientVisitas = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_VISITAS, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_VISITAS);
 
                 try
                 {
-                    rabbitMQClient.ObtenerElementosDeCola(funcionProcesarItem, funcionShutDown);
+                    mRabbitMQClientVisitas.ObtenerElementosDeCola(funcionProcesarItem, funcionShutDown);
                     mReiniciarLecturaRabbit = false;
                 }
                 catch (Exception ex)
@@ -1015,11 +1012,12 @@ namespace Es.Riam.Gnoss.ServicioLive
                 RabbitMQClient.ReceivedDelegate funcionProcesarItem = new RabbitMQClient.ReceivedDelegate(ProcesarItemColaPopularidad);
                 RabbitMQClient.ShutDownDelegate funcionShutDown = new RabbitMQClient.ShutDownDelegate(OnShutDown);
 
-                RabbitMQClient rabbitMQClient = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_POPULARIDAD, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_POPULARIDAD);
+                mRabbitMQClientPopularidad?.Dispose();
+                mRabbitMQClientPopularidad = new RabbitMQClient(RabbitMQClient.BD_SERVICIOS_WIN, COLA_POPULARIDAD, loggingService, mConfigService, mLoggerFactory.CreateLogger<RabbitMQClient>(), mLoggerFactory, EXCHANGE, COLA_POPULARIDAD);
 
                 try
                 {
-                    rabbitMQClient.ObtenerElementosDeCola(funcionProcesarItem, funcionShutDown);
+                    mRabbitMQClientPopularidad.ObtenerElementosDeCola(funcionProcesarItem, funcionShutDown);
                     mReiniciarLecturaRabbit = false;
                 }
                 catch (Exception ex)
@@ -1089,7 +1087,7 @@ namespace Es.Riam.Gnoss.ServicioLive
                         loggingService.GuardarLogError(ex, mlogger);
                     }
 
-                    //Cambiamos el número de intentos a 7 para procesarlas cada 5 min.
+                    //Cambiamos el nï¿½mero de intentos a 7 para procesarlas cada 5 min.
                     if (pFilaCola.Accion == (int)AccionLive.Votado || pFilaCola.Accion == (int)AccionLive.ComentarioAgregado || pFilaCola.Accion == (int)AccionLive.ComentarioEditado || pFilaCola.Accion == (int)AccionLive.ComentarioEliminado)
                     {
                         pFilaCola.NumIntentos = 7;
@@ -1117,7 +1115,7 @@ namespace Es.Riam.Gnoss.ServicioLive
 
         #endregion
 
-        #region Métodos sobreescritos
+        #region Mï¿½todos sobreescritos
 
         protected override ControladorServicioGnoss ClonarControlador()
         {
